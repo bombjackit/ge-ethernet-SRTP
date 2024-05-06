@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 setup(
     name='ge_ethernet_srtp',
     version='0.1',
-    packages=find_packages('lib'),
+    packages=['ge_ethernet_srtp'],
     package_dir={'ge_ethernet_srtp': 'lib'},
     author='TheMadHatt3r',
     description='A description of your library',

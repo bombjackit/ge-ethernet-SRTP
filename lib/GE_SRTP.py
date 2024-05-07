@@ -118,7 +118,7 @@ class GeSrtp:
     # Returns: Bytearray for sending via socket.
     ###########################################################
     def readSysMemory(self, reg):
-        if not re.search('%*(R|AI|AQ|I|Q)\d+',reg):
+        if not re.search('%*(R|AI|AQ|I|Q|QB)\d+',reg):
             raise Exception("Invalid Register Address! (" + reg + ").")
 
         try:
@@ -126,7 +126,7 @@ class GeSrtp:
             tmp = GE_SRTP_Messages.BASE_MSG.copy()
             tmp[42] = GE_SRTP_Messages.SERVICE_REQUEST_CODE["READ_SYS_MEMORY"]
             # Update for type of register
-            tmp[43] = GE_SRTP_Messages.MEMORY_TYPE_CODE[re.search('(R|AI|AQ|I|Q)',reg)[0]]
+            tmp[43] = GE_SRTP_Messages.MEMORY_TYPE_CODE[re.search('(R|AI|AQ|I|Q|QB)',reg)[0]]
             # 0 based register to read
             address = int(re.search('\d+',reg)[0]) - 1
             tmp[44] = int(address & 255).to_bytes(1,byteorder='big')        # Get LSB of Word
@@ -180,13 +180,13 @@ class GeSrtp:
             if not type(msg) == bytes:
                 msg = msg.encode()
                 print("Warning, msg type not bytes, trying encode... This is a code issue?")
-            print("Sending socket command to PLC... ", end='')
+            # print("Sending socket command to PLC... ", end='')
             self.plc_sock.send(msg)
             self.plc_sock.settimeout(2)
             response = self.plc_sock.recv(1024)
-            print("Response Received!")
-            #print("PLC Response: 0x" + ' 0x'.join(format(x, '02x') for x in response))
-            self.printLimitedBin("PLC Response:", response)
+            # print("Response Received!")
+            # print("Full PLC Response: 0x" + ' 0x'.join(format(x, '02x') for x in response))
+            # self.printLimitedBin("PLC Response:", response)
             #self.fastDecodeResponseMessage(response)
 
             return(response)

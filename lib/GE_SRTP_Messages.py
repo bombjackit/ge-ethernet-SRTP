@@ -97,6 +97,7 @@ MEMORY_TYPE_CODE = {
     "AI" :   b'\x0a',    # Analog Input (Word)
     "AQ" :   b'\x0c',    # Analog Output (Word)
     "I"  :   b'\x10',    # Descrete Input (Byte)
-    "Q"  :   b'\x12',    # Descrete Output (Byte)
+    "Q"  :   b'\x48',    # Descrete Output (Bit)
+    "QB"  :   b'\x12',    # Descrete Output (Byte)
 }
 

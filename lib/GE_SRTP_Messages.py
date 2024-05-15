@@ -98,6 +98,8 @@ MEMORY_TYPE_CODE = {
     "AQ" :   b'\x0c',    # Analog Output (Word)
     "I"  :   b'\x10',    # Descrete Input (Byte)
     "Q"  :   b'\x48',    # Descrete Output (Bit)
-    "QB"  :   b'\x12',    # Descrete Output (Byte)
+    "QB" :   b'\x12',    # Descrete Output (Byte)
+    "M"  :   b'\x4c',    # Descrete Internals (Bit)
+    "MB" :   b'\x16',    # Descrete Internals (Byte)
 }
 

@@ -118,7 +118,7 @@ class GeSrtp:
     # Returns: Bytearray for sending via socket.
     ###########################################################
     def readSysMemory(self, reg):
-        if not re.search('%*(R|AI|AQ|I|Q|QB)\d+',reg):
+        if not re.search('%*(R|AI|AQ|I|Q|QB|M|MB)\d+',reg):
             raise Exception("Invalid Register Address! (" + reg + ").")
 
         try:
@@ -126,13 +126,16 @@ class GeSrtp:
             tmp = GE_SRTP_Messages.BASE_MSG.copy()
             tmp[42] = GE_SRTP_Messages.SERVICE_REQUEST_CODE["READ_SYS_MEMORY"]
             # Update for type of register
-            tmp[43] = GE_SRTP_Messages.MEMORY_TYPE_CODE[re.search('(R|AI|AQ|I|Q|QB)',reg)[0]]
+            reg_type = str(re.search('(R|AI|AQ|I|Q|QB|M|MB)',reg)[0])
+            tmp[43] = GE_SRTP_Messages.MEMORY_TYPE_CODE[reg_type]
             # 0 based register to read
             address = int(re.search('\d+',reg)[0]) - 1
+            if 'B' in reg_type:  # Byte indexing rather than bit indexing
+                address //= 8
             tmp[44] = int(address & 255).to_bytes(1,byteorder='big')        # Get LSB of Word
             tmp[45] = int(address >> 8 ).to_bytes(1,byteorder='big')        # Get MSB of Word
             # Update for width
-            tmp[46] = b'\x01'               # DANGER - TODO make dynamic for different data types.
+            tmp[46] = b'\x20'               # DANGER - TODO make dynamic for different data types.
             bytes_to_send = b''.join(tmp)
             # Send to PLC, Read Response back as memory value (string type)
             response = self.sendSocketCommand(bytes_to_send)
@@ -185,14 +188,14 @@ class GeSrtp:
             self.plc_sock.settimeout(2)
             response = self.plc_sock.recv(1024)
             # print("Response Received!")
-            # print("Full PLC Response: 0x" + ' 0x'.join(format(x, '02x') for x in response))
+            print("Full PLC Response: 0x" + ' 0x'.join(format(x, '02x') for x in response))
             # self.printLimitedBin("PLC Response:", response)
             #self.fastDecodeResponseMessage(response)
 
             return(response)
         except Exception as err:
             print("\nException:" + str(err))
-            self.plc_sock.close()
+            # self.plc_sock.close()
 
         raise Exception("Exception during send/receive of PLC socket. Socket closed, raising...") 
 

@@ -17,11 +17,12 @@ from . import GE_SRTP_Messages
 class GeSrtpResponse:
 
 
-    def __init__(self, response, quiet=True):
+    def __init__(self, response, num_registers=1, debug_logging=False):
+        self.num_registers = num_registers
         self.register_result = 0
         self.status_code = 0
         self.status_code_minor = 0
-        self.quiet = quiet
+        self.debug_logging = debug_logging
 
         self.fastDecodeResponseMessage(response)
 
@@ -29,12 +30,16 @@ class GeSrtpResponse:
 
     def fastDecodeResponseMessage(self, msg):
         try:
+            start_byte = 44
+            end_byte = start_byte + (2 * self.num_registers)
             self.status_code         = struct.unpack('B', bytes([msg[42]]))[0]
             self.status_code_minor   = struct.unpack('B', bytes([msg[43]]))[0]
-            self.register_result     = struct.unpack('H', bytearray(msg[44:46]))[0] # TODO Danger, 16 bit word only!
-            if not self.quiet: 
+            self.register_result     = int.from_bytes(struct.unpack('B' * 2 * self.num_registers, msg[start_byte:end_byte]), byteorder='little')
+            if self.debug_logging: 
                 print("PLC Status Codes (42,43): 0x{:02x} 0x{:02x}".format(self.status_code, self.status_code_minor))
-                print("Data From Reg (hex): {:02x}".format(self.register_result))
+                print("Data From Reg (hex): ", end="")
+                print("".join("{:02x}".format(byte) for byte in msg[start_byte:end_byte]), end="")
+                print()
 
         except Exception as err:
             print("Exception:" + str(err))
@@ -117,7 +122,7 @@ class GeSrtp:
     # registers. Expects format of R#### etc.
     # Returns: Bytearray for sending via socket.
     ###########################################################
-    def readSysMemory(self, reg):
+    def readSysMemory(self, reg, debug_logging=False):
         if not re.search('%*(R|AI|AQ|I|Q|QB|M|MB)\d+',reg):
             raise Exception("Invalid Register Address! (" + reg + ").")
 
@@ -135,11 +140,14 @@ class GeSrtp:
             tmp[44] = int(address & 255).to_bytes(1,byteorder='big')        # Get LSB of Word
             tmp[45] = int(address >> 8 ).to_bytes(1,byteorder='big')        # Get MSB of Word
             # Update for width
-            tmp[46] = b'\x20'               # DANGER - TODO make dynamic for different data types.
+            num_registers = 1
+            if ':' in reg:
+                num_registers = int(reg.split(':')[1])
+            tmp[46] = num_registers.to_bytes(1, byteorder='big')  # Set number of registers to read
             bytes_to_send = b''.join(tmp)
             # Send to PLC, Read Response back as memory value (string type)
-            response = self.sendSocketCommand(bytes_to_send)
-            return(GeSrtpResponse(response))
+            response = self.sendSocketCommand(bytes_to_send, debug_logging)
+            return(GeSrtpResponse(response, num_registers, debug_logging))
         except Exception as err:
             print(err)
             raise Exception("Failure reading PLC or Register from PLC. Abort")
@@ -177,18 +185,21 @@ class GeSrtp:
     # Must first init lib and have open socket.
     # Returns response or throws Exception
     ###########################################################
-    def sendSocketCommand(self, msg):
+    def sendSocketCommand(self, msg, debug_logging=False):
 
         try:
             if not type(msg) == bytes:
                 msg = msg.encode()
                 print("Warning, msg type not bytes, trying encode... This is a code issue?")
             # print("Sending socket command to PLC... ", end='')
+            if debug_logging:
+                print("Full PLC Response: 0x" + ' 0x'.join(format(x, '02x') for x in msg))
             self.plc_sock.send(msg)
             self.plc_sock.settimeout(2)
             response = self.plc_sock.recv(1024)
             # print("Response Received!")
-            print("Full PLC Response: 0x" + ' 0x'.join(format(x, '02x') for x in response))
+            if debug_logging:
+                print("Full PLC Response: 0x" + ' 0x'.join(format(x, '02x') for x in response))
             # self.printLimitedBin("PLC Response:", response)
             #self.fastDecodeResponseMessage(response)
 

@@ -101,5 +101,6 @@ MEMORY_TYPE_CODE = {
     "QB" :   b'\x12',    # Descrete Output (Byte)
     "M"  :   b'\x4c',    # Descrete Internals (Bit)
     "MB" :   b'\x16',    # Descrete Internals (Byte)
+    "G"  :   b'\x56',    # Descrete Internals (Bit)
+    "GB" :   b'\x38',    # Descrete Internals (Byte)
 }
-

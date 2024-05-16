@@ -10,7 +10,28 @@ import builtins
 # Andon PLC IP address
 # plc_ip = '4.120.200.1'
 # Quality PLC IP address
-plc_ip = '4.120.80.10'
+# plc_ip = '4.120.80.10'
+plc_ip = '4.120.28.18'
+
+plc_list = [
+    '4.101.108.251',
+    '4.120.28.15',
+    '4.120.28.17',
+    '4.120.28.18',
+    '4.120.60.47',
+    '4.120.80.1',
+    '4.120.80.10',
+    '4.120.90.100',
+    '4.120.90.101',
+    '4.120.90.102',
+    '4.120.90.103',
+    '4.120.90.106',
+    '4.120.90.107',
+    '4.120.90.108',
+    '4.120.90.109',
+    '4.120.90.110',
+    '4.120.90.111'
+]
 
 # PLC tags
 plc_tags = {
@@ -20,14 +41,10 @@ plc_tags = {
     # "andon1": "MB03521",
     # "andon2": "MB03522",
     # "andon3": "MB03523",
-    "T1 Body 1": "R20000",
-    "T1 Body 2": "R20001",
-    "T1 Seq 1": "R20002",
-    "T1 Seq 2": "R20003",
-    "T2 Body 1": "R20004",
-    "T2 Body 2": "R20005",
-    "T2 Seq 1": "R20006",
-    "T2 Seq 2": "R20007",
+    "T1 Body": "R20000:2",
+    "T1 Seq": "R20002:2",
+    "T2 Body": "R20004:2",
+    "T2 Seq": "R20006:2",
 }
 
 # Buffer print function that logs to a file
@@ -55,16 +72,18 @@ def parse_tag_data(data, data_type):
     return parsed_data
 
 # Function to read tags from the PLC
-def read_tags(plc, tags):
+def read_tags(plc, tags, debug_logging=False):
     values = {}
     for tag_name, tag_address in tags.items():
-        print_and_log(f'READING: {tag_address}')
+        if debug_logging:
+            print(f'READING: {tag_address}')
         try:
-            res = plc.readSysMemory(tag_address)
+            res = plc.readSysMemory(tag_address, debug_logging)
         except Exception as e:
             print(f'Failed to read {tag_address}: {e}')
             continue
-        print_and_log(f'RES: {res.register_result}')
+        if debug_logging:
+            print(f'RES: {res.register_result}')
         values[tag_name] = res.register_result
         # if isinstance(values[tag_name], bytes):
         #     values[tag_name] = parse_tag_data(values[tag_name], 'byte_string')
@@ -72,6 +91,19 @@ def read_tags(plc, tags):
 
 # Main script
 def main():
+    debug_logging = False
+    check_ip_list = False
+
+    if check_ip_list:
+        for p_ip in plc_list:
+            plc = connect_to_plc(p_ip)
+            try:
+                current_values = read_tags(plc, plc_tags, debug_logging)
+                print(f'Successfully read value {current_values} from plc ip {plc_ip}')
+            except Exception as e:
+                print(f'Failed to read from plc ip {plc_ip} with Error: {e}')
+        return
+
     plc = connect_to_plc(plc_ip)
     last_values = {}
 

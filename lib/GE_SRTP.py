@@ -78,7 +78,7 @@ class GeSrtp:
     # Sends 56 Byte init string to PLC.
     # Returns 0 on ok, else error number.
     ###########################################################
-    def initConnection(self, quiet=True):
+    def initConnection(self, debug_logging=False):
         try:
             print("Connecting to {} on {}... ".format(self.plc_ip, self.PLC_PORT), end='')
             self.plc_sock.connect((self.plc_ip, self.PLC_PORT))
@@ -86,9 +86,13 @@ class GeSrtp:
 
             # Send 56 byte start package.
             print("Sending INIT_MSG to PLC... ", end='')
+            if debug_logging:
+                print("Full PLC Request: 0x" + ' 0x'.join(format(x, '02x') for x in GE_SRTP_Messages.INIT_MSG))
             self.plc_sock.send(GE_SRTP_Messages.INIT_MSG)
             self.plc_sock.settimeout(2)
             response = self.plc_sock.recv(1024)
+            if debug_logging:
+                print("Full PLC Response: 0x" + ' 0x'.join(format(x, '02x') for x in response))
             print("OK!")
             #self.printLimitedBin("Response sample from INIT_MSG:",response, end=0)
 
@@ -194,7 +198,7 @@ class GeSrtp:
                 print("Warning, msg type not bytes, trying encode... This is a code issue?")
             # print("Sending socket command to PLC... ", end='')
             if debug_logging:
-                print("Full PLC Response: 0x" + ' 0x'.join(format(x, '02x') for x in msg))
+                print("Full PLC Request: 0x" + ' 0x'.join(format(x, '02x') for x in msg))
             self.plc_sock.send(msg)
             self.plc_sock.settimeout(2)
             response = self.plc_sock.recv(1024)

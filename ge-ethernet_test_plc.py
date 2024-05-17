@@ -96,7 +96,7 @@ def main():
 
     if check_ip_list:
         for p_ip in plc_list:
-            plc = connect_to_plc(p_ip)
+            plc = connect_to_plc(p_ip, debug_logging)
             try:
                 current_values = read_tags(plc, plc_tags, debug_logging)
                 print(f'Successfully read value {current_values} from plc ip {plc_ip}')
@@ -104,7 +104,7 @@ def main():
                 print(f'Failed to read from plc ip {plc_ip} with Error: {e}')
         return
 
-    plc = connect_to_plc(plc_ip)
+    plc = connect_to_plc(plc_ip, debug_logging)
     last_values = {}
 
     while True:

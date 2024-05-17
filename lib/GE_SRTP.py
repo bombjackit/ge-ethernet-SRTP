@@ -2,6 +2,7 @@
 # GE SRTP PLC Low level library
 #
 # Author: Collin Matthews - 2020
+#         Dilpreet Chana - 2024
 ###########################################################
 
 import os, sys

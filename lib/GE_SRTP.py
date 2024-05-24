@@ -10,6 +10,7 @@ import re
 import struct
 import socket
 from . import GE_SRTP_Messages
+import datetime
 
 
 ###########################################################
@@ -143,12 +144,19 @@ class GeSrtp:
             if 'B' in reg_type:  # Byte indexing rather than bit indexing
                 address //= 8
             tmp[44] = int(address & 255).to_bytes(1,byteorder='big')        # Get LSB of Word
-            tmp[45] = int(address >> 8 ).to_bytes(1,byteorder='big')        # Get MSB of Word
-            # Update for width
+            tmp[45] = int(address >> 8 ).to_bytes(1,byteorder='big')        # Get MSB of Word 
+
             num_registers = 1
             if ':' in reg:
                 num_registers = int(reg.split(':')[1])
             tmp[46] = num_registers.to_bytes(1, byteorder='big')  # Set number of registers to read
+
+            # Set the time bytes
+            current_time = datetime.datetime.now().time()
+            tmp[26] = current_time.second.to_bytes(1, byteorder='big')
+            tmp[27] = current_time.minute.to_bytes(1, byteorder='big')
+            tmp[28] = current_time.hour.to_bytes(1, byteorder='big')
+
             bytes_to_send = b''.join(tmp)
             # Send to PLC, Read Response back as memory value (string type)
             response = self.sendSocketCommand(bytes_to_send, debug_logging)

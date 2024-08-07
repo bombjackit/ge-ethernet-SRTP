@@ -26,13 +26,16 @@ class GeSrtpResponse:
         self.status_code_minor = 0
         self.debug_logging = debug_logging
 
-        self.fastDecodeResponseMessage(response)
+        self.fastDecodeResponseMessage(response, num_registers)
 
 
 
-    def fastDecodeResponseMessage(self, msg):
+    def fastDecodeResponseMessage(self, msg, num_registers=1):
         try:
-            start_byte = 44
+            if num_registers <= 3:
+                start_byte = 44
+            else:
+                start_byte = 56
             end_byte = start_byte + (2 * self.num_registers)
             self.status_code         = struct.unpack('B', bytes([msg[42]]))[0]
             self.status_code_minor   = struct.unpack('B', bytes([msg[43]]))[0]
